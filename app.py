@@ -1,4 +1,3 @@
-// elastic_api_final/app.py
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from elasticsearch import Elasticsearch
