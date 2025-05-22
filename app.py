@@ -24,8 +24,9 @@ def query_streams():
     try:
         data = request.json
         playlist = data.get("playlist")
-        from_date = data.get("from_date")
-        to_date = data.get("to_date")
+        from_date = data.get("from_date") or data.get("date")
+to_date = data.get("to_date") or data.get("date")
+
 
         if not all([playlist, from_date, to_date]):
             return jsonify({"error": "Missing parameters"}), 400
