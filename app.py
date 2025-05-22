@@ -6,7 +6,7 @@ import traceback
 app = Flask(__name__)
 CORS(app)
 
-es = Elasticsearch("http://183.80.130.239:9200")
+es = Elasticsearch("http://183.80.130.239:9200")  # Đổi lại nếu IP thay đổi
 
 @app.route("/")
 def home():
@@ -17,15 +17,20 @@ def query_streams():
     try:
         data = request.json
         playlist = data.get("playlist")
-        
-        # Cho phép chỉ truyền 1 ngày
-        from_date = data.get("from_date") or data.get("date")
-        to_date = data.get("to_date") or data.get("date")
+        from_date = data.get("from_date")
+        to_date = data.get("to_date")
+        single_date = data.get("date")
 
-        if not all([playlist, from_date, to_date]):
-            return jsonify({"error": "Missing parameters"}), 400
+        if not playlist:
+            return jsonify({"error": "Missing playlist parameter"}), 400
 
-        body = {
+        # Trường hợp chỉ truyền 'date', dùng làm cả from & to
+        if single_date:
+            from_date = to_date = single_date
+        elif not (from_date and to_date):
+            return jsonify({"error": "Missing date range"}), 400
+
+        query = {
             "query": {
                 "bool": {
                     "must": [
@@ -50,7 +55,7 @@ def query_streams():
             }
         }
 
-        result = es.search(index="raw_playlist", body=body)
+        result = es.search(index="raw_playlist", body=query)
         total = result["aggregations"]["total_streams"]["value"]
         return jsonify({"total_streams": total})
 
